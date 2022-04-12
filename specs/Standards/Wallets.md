@@ -1,0 +1,174 @@
+# Wallets
+
+## Summary
+
+TODO: What this standard is about.
+
+## Motivation
+
+TODO: Why we need this standard.
+
+## Terminology
+
+- **Connected**: The state of whether a dApp has access to one or more accounts in the form of `FunctionCall` access keys.
+
+## Injected Wallet Interface
+
+Below is a high-level overview of what an injected wallet should look like: 
+
+```ts
+interface WalletAccount {
+  accountId: string;
+}
+
+interface ConnectParams {
+  contractId: string;
+  methodNames?: Array<string>;
+}
+
+interface SignAndSendTransactionParams {
+  signerId: string;
+  receiverId: string;
+  // Serializable NEAR Actions (plain objects).
+  actions: Array<Action>;
+}
+
+interface Transaction {
+  signerId: string;
+  receiverId: string;
+  // Serializable NEAR Actions (plain objects).
+  actions: Array<Action>;
+}
+
+interface SignAndSendTransactionsParams {
+  transactions: Array<Transaction>;
+}
+
+interface SwitchNetworkParams {
+  networkId: string;
+}
+
+interface AddNetworkParams {
+  networkId: string;
+  nodeUrl: string;
+}
+
+// Allows for other functionality in the future.
+// Heavily inspired by https://docs.metamask.io/guide/rpc-api.html#ethereum-json-rpc-methods.
+type RequestParams =
+  // Get accounts exposed to dApp. Empty list of accounts means we aren't connected.
+  | { method: "getAccounts" }
+  // Get the currently selected network.
+  | { method: "getNetwork" }
+  // Get locked status of wallet (e.g. Sender has this behaviour).
+  | { method: "isUnlocked" }
+  // Request access to one or more accounts (i.e. sign in).
+  | { method: "connect", params: ConnectParams }
+  // Remove access to all accounts (i.e. sign out).
+  | { method: "disconnect" }
+  // Sign and Send one or more NEAR Actions.
+  | { method: "signAndSendTransaction"; params: SignAndSendTransactionParams }
+  // Sign and Send one or more NEAR Transactions.
+  | { method: "signAndSendTransactions"; params: SignAndSendTransactionsParams }
+  // Request to switch networks.
+  | { method: "switchNetwork"; params: SwitchNetworkParams }
+  // Request to add a custom network.
+  | { method: "addNetwork"; params: AddNetworkParams };
+
+type Unsubscribe = () => void;
+
+type WalletEvent = "accountsChanged" | "networkChanged";
+
+interface Wallet {
+  request(params: RequestParams): Promise<unknown>;
+  on(event: WalletEvent, callback: () => void): Unsubscribe;
+  off(event: WalletEvent, callback: () => void): void;
+}
+
+
+```
+
+## Actions
+
+Below are the 8 NEAR Actions and used for signing transactions:
+
+```ts
+interface CreateAccountAction {
+  type: "CreateAccount";
+}
+
+interface DeployContractAction {
+  type: "DeployContract";
+  params: {
+    code: Uint8Array;
+  };
+}
+
+interface FunctionCallAction {
+  type: "FunctionCall";
+  params: {
+    methodName: string;
+    args: object;
+    gas: string;
+    deposit: string;
+  };
+}
+
+interface TransferAction {
+  type: "Transfer";
+  params: {
+    deposit: string;
+  };
+}
+
+interface StakeAction {
+  type: "Stake";
+  params: {
+    stake: string;
+    publicKey: string;
+  };
+}
+
+type AddKeyPermission =
+  | "FullAccess"
+  | {
+      receiverId: string;
+      allowance?: string;
+      methodNames?: Array<string>;
+    };
+
+interface AddKeyAction {
+  type: "AddKey";
+  params: {
+    publicKey: string;
+    accessKey: {
+      nonce?: number;
+      permission: AddKeyPermission;
+    };
+  };
+}
+
+interface DeleteKeyAction {
+  type: "DeleteKey";
+  params: {
+    publicKey: string;
+  };
+}
+
+interface DeleteAccountAction {
+  type: "DeleteAccount";
+  params: {
+    beneficiaryId: string;
+  };
+}
+
+type Action =
+  | CreateAccountAction
+  | DeployContractAction
+  | FunctionCallAction
+  | TransferAction
+  | StakeAction
+  | AddKeyAction
+  | DeleteKeyAction
+  | DeleteAccountAction;
+```
