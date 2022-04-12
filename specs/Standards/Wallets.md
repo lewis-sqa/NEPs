@@ -187,3 +187,6 @@ Within this prompt they can select one or more of their imported accounts and ha
 - If there are problems with the `AddKey` action for any account, we should continue unless none were successful. In the event where only a subset of the selected accounts were connected, the dApp can call `connect` again where the user could modify the list (remove existing accounts and/or add new ones).
 - If it should be a requirement, we could consider a `maxAccounts` parameter for `connect` that restricts the selection to even a single account.
 
+### Multiple Accounts
+
+An important concept to this architecture is dApps having access to multiple accounts. This might seem confusing at first because why would a dApp want to sign transactions with multiple accounts at the same time? The idea is the dApp might still maintain the concept of a single "active" account, but users don't have to sign out and sign in to different accounts each time. The dApp can display a simple switcher and perform transactions with the new account without having to further prompt the user, thus improving the UX flow.
