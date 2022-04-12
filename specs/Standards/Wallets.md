@@ -196,3 +196,7 @@ TODO: Add references/images around existing wallets and how they have multiple a
 TODO: Talk about how WalletConnect has first-class support for this functionality.
 
 TODO: Reference Ethereum APIs where they also return a list of accounts (though MetaMask always returns an array with one address).
+
+### Locked Status
+
+TODO: Talk about what it means for a wallet to be locked. What you can access etc. 
