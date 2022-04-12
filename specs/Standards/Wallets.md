@@ -190,3 +190,9 @@ Within this prompt they can select one or more of their imported accounts and ha
 ### Multiple Accounts
 
 An important concept to this architecture is dApps having access to multiple accounts. This might seem confusing at first because why would a dApp want to sign transactions with multiple accounts at the same time? The idea is the dApp might still maintain the concept of a single "active" account, but users don't have to sign out and sign in to different accounts each time. The dApp can display a simple switcher and perform transactions with the new account without having to further prompt the user, thus improving the UX flow.
+
+TODO: Add references/images around existing wallets and how they have multiple accounts internally, but only expose a single "active" account.
+
+TODO: Talk about how WalletConnect has first-class support for this functionality.
+
+TODO: Reference Ethereum APIs where they also return a list of accounts (though MetaMask always returns an array with one address).
