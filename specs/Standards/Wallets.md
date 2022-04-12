@@ -172,3 +172,16 @@ type Action =
   | DeleteKeyAction
   | DeleteAccountAction;
 ```
+
+## Connecting
+
+The purpose of connecting to a wallet is to give the dApp access to one more accounts in the form of `FunctionCall` access keys. The user will be prompted with an interface similar to the example taken from Math Wallet:
+
+![Connect Prompt](assets/connect-prompt.png)
+
+Within this prompt they can select one or more of their imported accounts and have it accessible to the dApp via the `getAccounts` request method.
+
+### Considerations
+
+- If the wallet has only one imported account, the UI could be simplified down to an approval prompt to connect with the account.
+- If there are problems with the `AddKey` action for any account, we should continue unless none were successful. In the event where only a subset of the selected accounts were connected, the dApp can call `connect` again where the user could modify the list (remove existing accounts and/or add new ones).
