@@ -21,6 +21,8 @@ import { providers } from "near-api-js";
 
 interface Account {
   accountId: string;
+  // Public key related to the underlying FunctionCall access key.
+  publicKey: string;
 }
 
 interface Network {
