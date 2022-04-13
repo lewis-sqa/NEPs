@@ -17,8 +17,15 @@ TODO: Why we need this standard.
 Below is a high-level overview of what an injected wallet should look like: 
 
 ```ts
-interface WalletAccount {
+import { providers } from "near-api-js";
+
+interface Account {
   accountId: string;
+}
+
+interface Network {
+  networkId: string;
+  nodeUrl: string;
 }
 
 interface ConnectParams {
@@ -47,39 +54,77 @@ interface SignAndSendTransactionsParams {
 
 // Allows for other functionality in the future.
 // Heavily inspired by https://docs.metamask.io/guide/rpc-api.html#ethereum-json-rpc-methods.
-type RequestParams =
-  // Get accounts exposed to dApp. Empty list of accounts means we aren't connected.
-  | { method: "getAccounts" }
+interface Methods {
+  // Get accounts exposed to dApp.
+  // Empty list of accounts means we aren't connected.
+  getAccounts: {
+    params: {
+      method: "getAccounts";
+    };
+    response: Array<Account>;
+  };
   // Get the currently selected network.
-  | { method: "getNetwork" }
+  getNetwork: {
+    params: {
+      method: "getNetwork";
+    };
+    response: Network;
+  };
   // Request access to one or more accounts (i.e. sign in).
-  | { method: "connect", params: ConnectParams }
+  connect: {
+    params: {
+      method: "connect";
+      params: ConnectParams;
+    };
+    response: Array<Account>;
+  };
   // Remove access to all accounts (i.e. sign out).
-  | { method: "disconnect" }
+  disconnect: {
+    params: {
+      method: "disconnect";
+    };
+    response: void;
+  };
   // Sign and Send one or more NEAR Actions.
-  | { method: "signAndSendTransaction"; params: SignAndSendTransactionParams }
+  signAndSendTransaction: {
+    params: {
+      method: "signAndSendTransaction";
+      params: SignAndSendTransactionParams;
+    };
+    response: providers.FinalExecutionOutcome;
+  };
   // Sign and Send one or more NEAR Transactions.
-  | { method: "signAndSendTransactions"; params: SignAndSendTransactionsParams };
+  signAndSendTransactions: {
+    params: {
+      method: "signAndSendTransactions";
+      params: SignAndSendTransactionsParams;
+    };
+    response: Array<providers.FinalExecutionOutcome>;
+  };
+}
+
+interface Events {
+  accountsChanged: { accounts: Array<Account> };
+};
 
 type Unsubscribe = () => void;
 
-type WalletEvents = {
-  accountsChanged: { accounts: Array<WalletAccount> };
-};
-
 interface Wallet {
-  request(params: RequestParams): Promise<unknown>;
-  on<EventName extends keyof WalletEvents>(
+  request<
+    MethodName extends keyof Methods,
+    Method extends Methods<MethodName>
+  >(
+    params: Method["params"]
+  ): Promise<Method["response"]>;
+  on<EventName extends keyof Events>(
     event: EventName,
-    callback: (params: WalletEvents<EventName>) => void
+    callback: (params: Events<EventName>) => void
   ): Unsubscribe;
-  off<EventName extends keyof WalletEvents>(
+  off<EventName extends keyof Events>(
     event: EventName,
     callback?: () => void
   ): void;
 }
-
-
 ```
 
 ## Actions
