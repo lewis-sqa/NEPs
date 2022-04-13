@@ -71,12 +71,20 @@ type RequestParams =
 
 type Unsubscribe = () => void;
 
-type WalletEvent = "accountsChanged" | "networkChanged";
+type WalletEvents = {
+  accountsChanged: { accounts: Array<WalletAccount> };
+};
 
 interface Wallet {
   request(params: RequestParams): Promise<unknown>;
-  on(event: WalletEvent, callback: () => void): Unsubscribe;
-  off(event: WalletEvent, callback: () => void): void;
+  on<EventName extends keyof WalletEvents>(
+    event: EventName,
+    callback: (params: WalletEvents<EventName>) => void
+  ): Unsubscribe;
+  off<EventName extends keyof WalletEvents>(
+    event: EventName,
+    callback?: () => void
+  ): void;
 }
 
 
