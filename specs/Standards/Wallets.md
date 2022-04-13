@@ -44,15 +44,6 @@ interface SignAndSendTransactionsParams {
   transactions: Array<Transaction>;
 }
 
-interface SwitchNetworkParams {
-  networkId: string;
-}
-
-interface AddNetworkParams {
-  networkId: string;
-  nodeUrl: string;
-}
-
 // Allows for other functionality in the future.
 // Heavily inspired by https://docs.metamask.io/guide/rpc-api.html#ethereum-json-rpc-methods.
 type RequestParams =
