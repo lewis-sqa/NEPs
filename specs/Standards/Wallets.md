@@ -60,8 +60,6 @@ type RequestParams =
   | { method: "getAccounts" }
   // Get the currently selected network.
   | { method: "getNetwork" }
-  // Get locked status of wallet (e.g. Sender has this behaviour).
-  | { method: "isUnlocked" }
   // Request access to one or more accounts (i.e. sign in).
   | { method: "connect", params: ConnectParams }
   // Remove access to all accounts (i.e. sign out).
@@ -69,11 +67,7 @@ type RequestParams =
   // Sign and Send one or more NEAR Actions.
   | { method: "signAndSendTransaction"; params: SignAndSendTransactionParams }
   // Sign and Send one or more NEAR Transactions.
-  | { method: "signAndSendTransactions"; params: SignAndSendTransactionsParams }
-  // Request to switch networks.
-  | { method: "switchNetwork"; params: SwitchNetworkParams }
-  // Request to add a custom network.
-  | { method: "addNetwork"; params: AddNetworkParams };
+  | { method: "signAndSendTransactions"; params: SignAndSendTransactionsParams };
 
 type Unsubscribe = () => void;
 
