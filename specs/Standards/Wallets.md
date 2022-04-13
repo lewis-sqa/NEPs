@@ -29,14 +29,14 @@ interface ConnectParams {
 interface SignAndSendTransactionParams {
   signerId?: string;
   receiverId: string;
-  // Serializable NEAR Actions (plain objects).
+  // NEAR Actions (plain objects). See "Actions" section for details.
   actions: Array<Action>;
 }
 
 interface Transaction {
   signerId?: string;
   receiverId: string;
-  // Serializable NEAR Actions (plain objects).
+  // NEAR Actions (plain objects). See "Actions" section for details.
   actions: Array<Action>;
 }
 
