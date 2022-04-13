@@ -24,6 +24,7 @@ interface WalletAccount {
 interface ConnectParams {
   contractId: string;
   methodNames?: Array<string>;
+  maxAccounts?: number;
 }
 
 interface SignAndSendTransactionParams {
