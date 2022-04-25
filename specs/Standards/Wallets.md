@@ -216,17 +216,17 @@ type Action =
 
 ## Connecting
 
-The purpose of connecting to a wallet is to give the dApp access to one more accounts in the form of `FunctionCall` access keys. The user will be prompted with an interface similar to the example taken from Math Wallet:
+The purpose of connecting to a wallet is to give dApps access to one or more accounts - backed by `FunctionCall` access keys. When the Connect flow is triggered, the user will be prompted with an interface similar to this example taken from Math Wallet:
 
 ![Connect Prompt](assets/connect-prompt.png)
 
-Within this prompt they can select one or more of their imported accounts and have it accessible to the dApp via the `getAccounts` request method.
+The list of accounts to select are those that have been imported previously. The user can choose which of these accounts are accessible to the dApp using the `getAccounts` request method.
 
 ### Considerations
 
-- If the wallet has only one imported account, the UI could be simplified down to an approval prompt to connect with the account.
-- If there are problems with the `AddKey` action for any account, we should continue unless none were successful. In the event where only a subset of the selected accounts were connected, the dApp can call `connect` again where the user could modify the list (remove existing accounts and/or add new ones).
-- If it should be a requirement, we could consider a `maxAccounts` parameter for `connect` that restricts the selection to even a single account.
+- If there's only one imported account, the flow can be simplified to an approval prompt to connect with the only account.
+- If there are problems with the `AddKey` action for any account, we should continue unless none were successful. In the event where only a subset of the selected accounts were connected, the dApp can call `connect` again so the user can modify the list (remove existing accounts and/or add new ones).
+- If the dApp would like to restrict the number of accounts (e.g. only one) a user can select, they can pass a `maxAccounts` parameter for the `connect` request method.
 
 ### Multiple Accounts
 
