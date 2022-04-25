@@ -224,25 +224,40 @@ type Action =
 
 ### Examples
 
+**Connect to the wallet**
+
 ```ts
-// Connect to the wallet.
 const accounts = await window.near.request({
   method: "connect",
   params: { contractId: "guest-book.testnet" }
 });
+```
 
-// Get accounts (exposed by connecting).
-const accounts2 = await window.near.request({ method: "getAccounts" });
+**Get accounts (exposed via `connect`)**
 
-// Subscribe to account changes.
+```ts
+const accounts = await window.near.request({
+  method: "getAccounts"
+});
+```
+
+**Subscribe to account changes**
+
+```ts
 await window.near.on("accountsChanged", (accounts) => {
   console.log("Accounts Changed", accounts);
 });
+```
 
-// Get network configuration.
+**Get network configuration**
+
+```ts
 await window.near.request({ method: "getNetwork" });
+```
 
-// Sign and send a transaction.
+**Sign and send a transaction**
+
+```ts
 const result = await window.near.request({
   method: "signAndSendTransaction",
   params: {
