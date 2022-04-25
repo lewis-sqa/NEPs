@@ -220,7 +220,7 @@ The purpose of connecting to a wallet is to give dApps access to one or more acc
 
 ![Connect Prompt](assets/connect-prompt.png)
 
-The list of accounts to select are those that have been imported previously. The user can choose which of these accounts are accessible to the dApp using the `getAccounts` request method.
+The list of accounts to select are those that have been imported previously. The user can choose a subset of these accounts to expose to the dApp.
 
 ### Considerations
 
