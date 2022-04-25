@@ -12,7 +12,15 @@ TODO: Why we need this standard.
 
 - **Connected**: The state of whether a dApp has access to one or more accounts in the form of `FunctionCall` access keys.
 
-## Injected Wallet Interface
+## Injected Wallets
+
+TODO: Description here.
+
+### Namespace
+
+TODO: Description here explaining wallets will use the `window.near` namespace and expose a property to detect the wallet e.g. `isSender` or `isMathWallet`.
+
+### Wallet Interface
 
 Below is a high-level overview of what an injected wallet should look like: 
 
@@ -129,7 +137,7 @@ interface Wallet {
 }
 ```
 
-## Actions
+### Actions
 
 Below are the 8 NEAR Actions and used for signing transactions:
 
@@ -214,6 +222,45 @@ type Action =
   | DeleteAccountAction;
 ```
 
+### Examples
+
+```ts
+// Connect to the wallet.
+const accounts = await window.near.request({
+  method: "connect",
+  params: { contractId: "guest-book.testnet" }
+});
+
+// Get accounts (exposed by connecting).
+const accounts2 = await window.near.request({ method: "getAccounts" });
+
+// Subscribe to account changes.
+await window.near.on("accountsChanged", (accounts) => {
+  console.log("Accounts Changed", accounts);
+});
+
+// Get network configuration.
+await window.near.request({ method: "getNetwork" });
+
+// Sign and send a transaction.
+const result = await window.near.request({
+  method: "signAndSendTransaction",
+  params: {
+    signerId: "test.testnet",
+    receiverId: "guest-book.testnet",
+    actions: [{
+      type: "FunctionCall";
+      params: {
+        methodName: "addMessage",
+        args: { text: "Hello World!" },
+        gas: "30000000000000",
+        deposit: "10000000000000000000000",
+      };
+    }]
+  }
+});
+```
+
 ## Connecting
 
 The purpose of connecting to a wallet is to give dApps access to one or more accounts - backed by `FunctionCall` access keys. When the Connect flow is triggered, the user will be prompted with an interface similar to this example taken from Math Wallet:
@@ -230,7 +277,7 @@ The list of accounts to select are those that have been imported previously. The
 
 ### Multiple Accounts
 
-An important concept to this architecture is dApps having access to multiple accounts. This might seem confusing at first because why would a dApp want to sign transactions with multiple accounts at the same time? The idea is the dApp might still maintain the concept of a single "active" account, but users don't have to sign out and sign in to different accounts each time. The dApp can display a simple switcher and perform transactions with the new account without having to further prompt the user, thus improving the UX flow.
+An important concept of this architecture is dApps have access to multiple accounts. This might seem confusing at first because why would a dApp want to sign transactions with multiple accounts? The idea is the dApp might still maintain the concept of a single "active" account, but users won't need to sign in and out of accounts each time. The dApp can just display a switcher and sign transactions with new account without having to further prompt the user, thus improving the UX flow.
 
 TODO: Add references/images around existing wallets and how they have multiple accounts internally, but only expose a single "active" account.
 
