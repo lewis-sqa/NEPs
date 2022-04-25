@@ -264,13 +264,13 @@ const result = await window.near.request({
     signerId: "test.testnet",
     receiverId: "guest-book.testnet",
     actions: [{
-      type: "FunctionCall";
+      type: "FunctionCall",
       params: {
         methodName: "addMessage",
         args: { text: "Hello World!" },
         gas: "30000000000000",
         deposit: "10000000000000000000000",
-      };
+      },
     }]
   }
 });
