@@ -29,8 +29,16 @@ import { providers } from "near-api-js";
 
 interface Account {
   accountId: string;
-  // Public key related to the underlying FunctionCall access key.
+}
+
+interface KeyPair {
   publicKey: string;
+  privateKey: string;
+}
+
+interface ConnectedAccount extends Account {
+  // KeyPair related to the underlying FunctionCall access key.
+  keyPair: KeyPair;
 }
 
 interface Network {
@@ -86,7 +94,7 @@ interface Methods {
       method: "connect";
       params: ConnectParams;
     };
-    response: Array<Account>;
+    response: Array<ConnectedAccount>;
   };
   // Remove access to all accounts (i.e. sign out).
   disconnect: {
@@ -274,6 +282,130 @@ const result = await window.near.request({
     }]
   }
 });
+```
+
+## Bridge Wallets (i.e. WalletConnect)
+
+TODO: Description
+
+### Flows
+
+**Connecting**
+
+1. Create pairing and session (with no `FunctionCall` access to accounts).
+2. Call `near_connect` to gain access to one or more accounts (via `FunctionCall` access keys). This will update the session `accounts` state and `near_getAccounts` response.
+3. Store keypair(s) locally from `near_connect` to enable signing without WalletConnect for gas-only `FunctionCall` actions.
+
+**Transaction signing (gas-only `FunctionCall`)**
+
+1. Determine permissions required for transaction(s).
+2. Retrieve keypair(s) locally for account id(s).
+3. Sign and send transaction(s) within the dApp (no need to use WalletConnect session).
+
+**Transaction signing (elevated permission)**
+
+1. Determine permissions required for transaction(s).
+2. Call `near_signAndSendTransaction` (or `near_signAndSendTransactions`) for transaction(s) that require NEAR (not just gas), relate to another account(s) and/or don't match the `FunctionCall` access key permissions.
+
+**Update accounts (wallet)**
+
+1. Delete `FunctionCall` access keys of each deselected account. Adding new accounts is not supported (unable to send keypairs to dApp).
+2. Trigger WalletConnect session update.
+
+**Update accounts (dApp)**
+
+1. Call `near_connect` to reconfigure account access. This will update the session `accounts` state and `near_getAccounts` response.
+
+### JSON-RPC Methods
+
+**near_connect**
+
+Request access (via `FunctionCall` access keys) to one or more accounts. Private keys are returned to enable local signing 
+
+```ts
+interface ConnectRequest {
+  id: 1;
+  jsonrpc: "2.0";
+  method: "near_connect";
+  params: {
+    contractId: string;
+    methodNames?: Array<string>;
+    maxAccounts?: number;
+  };
+}
+
+interface Account {
+  accountId: string;
+}
+
+interface KeyPair {
+  publicKey: string;
+  privateKey: string;
+}
+
+interface ConnectedAccount extends Account {
+  // KeyPair related to the underlying FunctionCall access key.
+  keyPair: KeyPair;
+}
+
+interface ConnectResponse {
+  id: 1;
+  jsonrpc: "2.0";
+  result: Array<ConnectedAccount>;
+}
+```
+
+**near_signAndSendTransaction**
+
+```ts
+import { providers } from "near-api-js";
+
+interface SignAndSendTransactionRequest {
+  id: 1;
+  jsonrpc: "2.0";
+  method: "near_signAndSendTransaction";
+  params: {
+    signerId?: string;
+    receiverId: string;
+    // NEAR Actions (plain objects). See "Actions" section for details.
+    actions: Array<Action>;
+  };
+}
+
+interface SignAndSendTransactionResponse {
+  id: 1;
+  jsonrpc: "2.0";
+  result: providers.FinalExecutionOutcome;
+}
+```
+
+
+**near_signAndSendTransactions**
+
+```ts
+import { providers } from "near-api-js";
+
+interface SignAndSendTransactionsRequest {
+  id: 1;
+  jsonrpc: "2.0";
+  method: "near_signAndSendTransactions";
+  params: {
+    transactions: Array<Transaction>;
+  };
+}
+
+interface Transaction {
+  signerId?: string;
+  receiverId: string;
+  // NEAR Actions (plain objects). See "Actions" section for details.
+  actions: Array<Action>;
+}
+
+interface SignAndSendTransactionsResponse {
+  id: 1;
+  jsonrpc: "2.0";
+  result: Array<providers.FinalExecutionOutcome>;
+}
 ```
 
 ## Connecting
