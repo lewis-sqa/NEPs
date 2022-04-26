@@ -294,12 +294,12 @@ TODO: Description
 
 1. Create pairing and session (with no `FunctionCall` access to accounts).
 2. Call `near_connect` to gain access to one or more accounts (via `FunctionCall` access keys). This will update the session `accounts` state.
-3. Store keypair(s) locally to enable signing without WalletConnect for gas-only `FunctionCall` Actions.
+3. Store KeyPair(s) locally to enable signing without WalletConnect for gas-only `FunctionCall` Actions.
 
 **Transaction signing (gas-only `FunctionCall`)**
 
 1. Determine permissions required for transaction(s).
-2. Retrieve keypair(s) locally for account id(s).
+2. Retrieve KeyPair(s) locally for account id(s).
 3. Sign and send transaction(s) within the dApp (no need to use WalletConnect session).
 
 **Transaction signing (elevated permission)**
@@ -309,7 +309,7 @@ TODO: Description
 
 **Update accounts (wallet)**
 
-1. Delete `FunctionCall` access keys of each deselected account. Adding new accounts is not supported (unable to send keypairs to dApp).
+1. Delete `FunctionCall` access keys of each deselected account. Adding new accounts is not supported (unable to send KeyPairs to dApp).
 2. Trigger WalletConnect session update.
 
 **Update accounts (dApp)**
