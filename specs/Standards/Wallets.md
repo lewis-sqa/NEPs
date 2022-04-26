@@ -42,7 +42,7 @@ interface KeyPair {
 }
 
 interface ConnectedAccount extends Account {
-  // KeyPair related to the underlying FunctionCall access key.
+  // Key pair related to the underlying FunctionCall access key.
   keyPair: KeyPair;
 }
 
@@ -304,12 +304,12 @@ TODO: Description
 
 1. Create pairing and session (with no `FunctionCall` access to accounts).
 2. Call `near_connect` to gain access to one or more accounts (via `FunctionCall` access keys). This will update the session `accounts` state.
-3. Store KeyPair(s) locally to enable signing without WalletConnect for gas-only `FunctionCall` Actions.
+3. Store key pair(s) locally to enable signing without WalletConnect for gas-only `FunctionCall` Actions.
 
 **Transaction signing (gas-only `FunctionCall`)**
 
 1. Determine permissions required for transaction(s).
-2. Retrieve KeyPair(s) locally for account id(s).
+2. Retrieve key pair(s) locally for account id(s).
 3. Sign and send transaction(s) within the dApp (no need to use WalletConnect session).
 
 **Transaction signing (elevated permission)**
@@ -319,7 +319,7 @@ TODO: Description
 
 **Update accounts (wallet)**
 
-1. Delete `FunctionCall` access keys of each deselected account. Adding new accounts is not supported (unable to send KeyPairs to dApp).
+1. Delete `FunctionCall` access keys of each deselected account. Adding new accounts is not supported (unable to send key pairs to dApp).
 2. Trigger WalletConnect session update.
 
 **Update accounts (dApp)**
@@ -354,7 +354,7 @@ interface KeyPair {
 }
 
 interface ConnectedAccount extends Account {
-  // KeyPair related to the underlying FunctionCall access key.
+  // Key pair related to the underlying FunctionCall access key.
   keyPair: KeyPair;
 }
 
@@ -422,9 +422,9 @@ interface SignAndSendTransactionsResponse {
 
 It's important that an integration between NEAR and WalletConnect combines the native features of both platforms without compromising on their core concepts.
 
-Basing our implementation on other platforms such as Ethereum means only `signAndSendTransaction` and `signAndSendTransactions` are needed. The idea with this approach is accounts are referenced in the WalletConnect session and the wallet will use `FullAccess` keys to sign the transaction(s). While this works well with WalletConnect, the downside is it skips over a fundamental concept of NEAR, `FunctionCall` access keys.
+Basing our implementation on other platforms such as Ethereum means only `signAndSendTransaction` and `signAndSendTransactions` are needed. The idea with this approach is accounts are referenced in the WalletConnect session and the wallet will use `FullAccess` keys to sign the transaction(s). While this works well with WalletConnect, the downside is it skips over a fundamental concept in NEAR, `FunctionCall` access keys.
 
-Access Keys in NEAR enable permissions at a blockchain-level and can be revoked at any point. Using `FullAccess` keys effectively skips over this feature. It's best practice to use `FunctionCall` access keys where possible to reduce the frequency of prompts and increase security - we should only "step up" to `FullAccess` keys for Actions that need it.
+Access Keys enable permissions at a blockchain-level and can be revoked at any point. Using `FullAccess` keys effectively skips over this feature. It's best practice to use `FunctionCall` access keys where possible to reduce the frequency of prompts and increase security - we should only "step up" to `FullAccess` keys for Actions that need it.
 
 The approach detailed above for WalletConnect and NEAR attempts to solve these challenges with a new method, `near_connect`. The purpose of this method is to request access to one or more accounts in the form of `FunctionCall` access keys. This means:
 
@@ -432,7 +432,7 @@ The approach detailed above for WalletConnect and NEAR attempts to solve these c
 - The dApp can sign transactions locally (without WalletConnect) that match the permissions of the access key.
 - The user can revoke the access key without WalletConnect.
 
-The difficulty with this approach is trying to sync the WalletConnect accounts state with the accounts we have `FunctionCall` access keys. I originally planned for an additional method, `near_getAccounts` which also returned the `keyPair` but I began to question how secure it is. `near_connect` on the other hand requires confirmation from the wallet before returning this information. Without `near_getAccounts` we're unable to handle new accounts added to the session from the wallet side.
+The difficulty with this approach is trying to sync the WalletConnect accounts state with the accounts we have `FunctionCall` access keys for. I originally planned for a `near_getAccounts` which would also return the `keyPair` but I've since questioned the security implications of exposing key pairs like this. `near_connect` on the other hand requires confirmation from the wallet before returning this information. Without `near_getAccounts` we're unable to handle new accounts added to the session from the wallet side.
 
 ## Connecting
 
