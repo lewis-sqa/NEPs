@@ -418,6 +418,22 @@ interface SignAndSendTransactionsResponse {
 }
 ```
 
+### Challenges
+
+It's important that an integration between NEAR and WalletConnect combines the native features of both platforms without compromising on their core concepts.
+
+Basing our implementation on other platforms such as Ethereum means only `signAndSendTransaction` and `signAndSendTransactions` are needed. The idea with this approach is accounts are referenced in the WalletConnect session and the wallet will use `FullAccess` keys to sign the transaction(s). While this works well with WalletConnect, the downside is it skips over a fundamental concept of NEAR, `FunctionCall` access keys.
+
+Access Keys in NEAR enable permissions at a blockchain-level and can be revoked at any point. Using `FullAccess` keys effectively skips over this feature. It's best practice to use `FunctionCall` access keys where possible to reduce the frequency of prompts and increase security - we should only "step up" to `FullAccess` keys for Actions that need it.
+
+The approach detailed above for WalletConnect and NEAR attempts to solve these challenges with a new method, `near_connect`. The purpose of this method is to request access to one or more accounts in the form of `FunctionCall` access keys. This means:
+
+- The dApp "owns" the `FunctionCall` access key.
+- The dApp can sign transactions locally (without WalletConnect) that match the permissions of the access key.
+- The user can revoke the access key without WalletConnect.
+
+The difficulty with this approach is trying to sync the WalletConnect accounts state with the accounts we have `FunctionCall` access keys. I originally planned for an additional method, `near_getAccounts` which also returned the `keyPair` but I began to question how secure it is. `near_connect` on the other hand requires confirmation from the wallet before returning this information. Without `near_getAccounts` we're unable to handle new accounts added to the session from the wallet side.
+
 ## Connecting
 
 The purpose of connecting to a wallet is to give dApps access to one or more accounts - backed by `FunctionCall` access keys. When the Connect flow is triggered, the user will be prompted with an interface similar to this example taken from Math Wallet:
