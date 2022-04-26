@@ -14,15 +14,20 @@ TODO: Why we need this standard.
 
 ## Injected Wallets
 
-TODO: Description here.
+Injected wallets are browser extensions that implement the `Wallet` API (see below) via `window.near` where dApps can determine which wallet is available by inspecting the `id` property.
 
-### Namespace
+> Note: It's difficult to overlook the drawback of having a single namespace for wallets (even if Ethereum does this). Users must disable other wallets to avoid conflicts. Maybe `window.near` should be `Record<string, Wallet>`. This approach solves the problem of detecting which wallet(s) are available and supports multiple injected wallets simultaneously! 
 
-TODO: Description here explaining wallets will use the `window.near` namespace and expose a property to detect the wallet e.g. `isSender` or `isMathWallet`.
+### Wallet API
 
-### Wallet Interface
+At it's most basic, the Wallet API has main two features:
 
-Below is a high-level overview of what an injected wallet should look like: 
+- `request`: Communication with wallet.
+- `on` and `off`: Subscribe to notable events such as account updates.
+
+The decision to implement `request` instead of dedicated methods means wallets can define their own custom functionality without polluting the top-level namespace. The purpose of this spec is to define the minimum set of methods to be considered an official NEAR injected wallet. Wallets are free to innovate with functionality they believe could eventually become part of the spec such as querying the locked status.
+
+Heavily inspired by [Ethereum's JSON-RPC Methods](https://docs.metamask.io/guide/rpc-api.html#ethereum-json-rpc-methods), below is a high-level overview of what an injected wallet should look like.
 
 ```ts
 import { providers } from "near-api-js";
@@ -70,25 +75,19 @@ interface SignAndSendTransactionsParams {
   transactions: Array<Transaction>;
 }
 
-// Allows for other functionality in the future.
-// Heavily inspired by https://docs.metamask.io/guide/rpc-api.html#ethereum-json-rpc-methods.
 interface Methods {
-  // Get accounts exposed to dApp.
-  // Empty list of accounts means we aren't connected.
   getAccounts: {
     params: {
       method: "getAccounts";
     };
     response: Array<Account>;
   };
-  // Get the currently selected network.
   getNetwork: {
     params: {
       method: "getNetwork";
     };
     response: Network;
   };
-  // Request access to one or more accounts (i.e. sign in).
   connect: {
     params: {
       method: "connect";
@@ -96,14 +95,12 @@ interface Methods {
     };
     response: Array<ConnectedAccount>;
   };
-  // Remove access to all accounts (i.e. sign out).
   disconnect: {
     params: {
       method: "disconnect";
     };
     response: void;
   };
-  // Sign and Send one or more NEAR Actions.
   signAndSendTransaction: {
     params: {
       method: "signAndSendTransaction";
@@ -111,7 +108,6 @@ interface Methods {
     };
     response: providers.FinalExecutionOutcome;
   };
-  // Sign and Send one or more NEAR Transactions.
   signAndSendTransactions: {
     params: {
       method: "signAndSendTransactions";
@@ -128,6 +124,7 @@ interface Events {
 type Unsubscribe = () => void;
 
 interface Wallet {
+  id: string;
   request<
     MethodName extends keyof Methods,
     Method extends Methods<MethodName>
@@ -145,9 +142,22 @@ interface Wallet {
 }
 ```
 
+### Request Methods
+
+- `getAccounts`: Get accounts exposed to dApp. An empty list of accounts means we aren't connected.
+- `getNetwork`: Get the currently selected network.
+- `connect`: Request access to one or more accounts.
+- `disconnect`: Remove access to all accounts.
+- `signAndSendTransaction`: Sign and Send one or more NEAR Actions.
+- `signAndSendTransactions`: Sign and Send one or more NEAR Transactions.
+
+### Events
+
+- `accountsChanged`: Triggered whenever accounts are updated (e.g. calling `connect` and `disconnect`).
+
 ### Actions
 
-Below are the 8 NEAR Actions and used for signing transactions:
+Below are the 8 NEAR Actions used for signing transactions. Plain objects have been used to remove an unnecessary dependency on `near-api-js`.
 
 ```ts
 interface CreateAccountAction {
