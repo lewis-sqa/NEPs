@@ -305,7 +305,7 @@ TODO: Description
 **Transaction signing (elevated permission)**
 
 1. Determine permissions required for transaction(s).
-2. Call `near_signAndSendTransaction` (or `near_signAndSendTransactions`) for transaction(s) that require NEAR (not just gas), relate to another account(s) and/or don't match the `FunctionCall` access key permissions.
+2. Call `near_signAndSendTransaction` (or `near_signAndSendTransactions`) for transaction(s) that don't match the `FunctionCall` access key permissions.
 
 **Update accounts (wallet)**
 
