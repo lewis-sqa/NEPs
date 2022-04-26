@@ -294,7 +294,7 @@ TODO: Description
 
 1. Create pairing and session (with no `FunctionCall` access to accounts).
 2. Call `near_connect` to gain access to one or more accounts (via `FunctionCall` access keys). This will update the session `accounts` state.
-3. Store keypair(s) locally from `near_connect` to enable signing without WalletConnect for gas-only `FunctionCall` actions.
+3. Store keypair(s) locally to enable signing without WalletConnect for gas-only `FunctionCall` Actions.
 
 **Transaction signing (gas-only `FunctionCall`)**
 
