@@ -293,7 +293,7 @@ TODO: Description
 **Connecting**
 
 1. Create pairing and session (with no `FunctionCall` access to accounts).
-2. Call `near_connect` to gain access to one or more accounts (via `FunctionCall` access keys). This will update the session `accounts` state and `near_getAccounts` response.
+2. Call `near_connect` to gain access to one or more accounts (via `FunctionCall` access keys). This will update the session `accounts` state.
 3. Store keypair(s) locally from `near_connect` to enable signing without WalletConnect for gas-only `FunctionCall` actions.
 
 **Transaction signing (gas-only `FunctionCall`)**
@@ -314,7 +314,7 @@ TODO: Description
 
 **Update accounts (dApp)**
 
-1. Call `near_connect` to reconfigure account access. This will update the session `accounts` state and `near_getAccounts` response.
+1. Call `near_connect` to reconfigure account access. This will update the session `accounts` state.
 
 ### JSON-RPC Methods
 
