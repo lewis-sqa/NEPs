@@ -2,11 +2,11 @@
 
 ## Summary
 
-TODO: What this standard is about.
+Standard interfaces for wallets to maintain a consistent dApp experience.
 
 ## Motivation
 
-TODO: Why we need this standard.
+After working with various wallets such as Sender and Math Wallet, it's clear the lack of a standard has made it difficult for dApps to support more than one wallet.
 
 ## Terminology
 
@@ -22,7 +22,7 @@ Injected wallets are browser extensions that implement the `Wallet` API (see bel
 
 At it's most basic, the Wallet API has main two features:
 
-- `request`: Communication with wallet.
+- `request`: Communication with the wallet.
 - `on` and `off`: Subscribe to notable events such as account updates.
 
 The decision to implement `request` instead of dedicated methods means wallets can define their own custom functionality without polluting the top-level namespace. The purpose of this spec is to define the minimum set of methods to be considered an official NEAR injected wallet. Wallets are free to innovate with functionality they believe could eventually become part of the spec such as querying the locked status.
@@ -251,7 +251,7 @@ const accounts = await window.near.request({
 });
 ```
 
-**Get accounts (exposed via `connect`)**
+**Get accounts (after previously calling `connect`)**
 
 ```ts
 const accounts = await window.near.request({
@@ -270,7 +270,9 @@ await window.near.on("accountsChanged", (accounts) => {
 **Get network configuration**
 
 ```ts
-await window.near.request({ method: "getNetwork" });
+const network = await window.near.request({ 
+  method: "getNetwork" 
+});
 ```
 
 **Sign and send a transaction**
@@ -294,43 +296,49 @@ const result = await window.near.request({
 });
 ```
 
+## Connecting
+
+The purpose of connecting to a wallet is to give dApps access to one or more accounts - backed by `FunctionCall` access keys. When the Connect flow is triggered, the user will be prompted with an interface similar to this example taken from Math Wallet:
+
+![Connect Prompt](assets/connect-prompt.png)
+
+The list of accounts to select are those that have been imported previously. The user can choose a subset of these accounts to expose to the dApp.
+
+### Considerations
+
+- If there's only one imported account, the flow can be simplified to an approval prompt to connect with the only account.
+- If there are problems with the `AddKey` action for any account, we should continue unless none were successful. In the event where only a subset of the selected accounts were connected, the dApp can call `connect` again so the user can modify the list (remove existing accounts and/or add new ones).
+- If the dApp would like to restrict the number of accounts (e.g. only one) a user can select, they can pass a `maxAccounts` parameter for the `connect` request method.
+
+### Multiple Accounts
+
+An important concept of this architecture is dApps have access to multiple accounts. This might seem confusing at first because why would a dApp want to sign transactions with multiple accounts? The idea is the dApp might still maintain the concept of a single "active" account, but users won't need to sign in and out of accounts each time. The dApp can just display a switcher and sign transactions with new account without having to further prompt the user, thus improving the UX flow.
+
 ## Bridge Wallets (i.e. WalletConnect)
 
-TODO: Description
+Bridge wallets such as WalletConnect enable an architecture that decouples dApps from directly interacting with a wallet by using a relay (HTTP/WebSocket) server. The benefit to this is users can connect to wallets that aren't necessarily located in the same place as the dApp. For example a user can connect a dApp on their desktop to a wallet on their mobile device.
 
-### Flows
+### Challenges
 
-**Connecting**
+It's important that an integration between NEAR and WalletConnect combines the native features of both platforms without compromising on their core concepts.
 
-1. Create pairing and session (with no `FunctionCall` access to accounts).
-2. Call `near_connect` to gain access to one or more accounts (via `FunctionCall` access keys). This will update the session `accounts` state.
-3. Store key pair(s) locally to enable signing without WalletConnect for gas-only `FunctionCall` Actions.
+Basing our implementation on other platforms such as Ethereum means only `signAndSendTransaction` and `signAndSendTransactions` are needed. The idea with this approach is accounts are referenced in the WalletConnect session and the wallet will use `FullAccess` keys to sign the transaction(s). While this works well with WalletConnect, the downside is it skips over a fundamental concept in NEAR, `FunctionCall` access keys.
 
-**Transaction signing (gas-only `FunctionCall`)**
+Access Keys enable permissions at a blockchain-level and can be revoked at any point. Using `FullAccess` keys effectively skips over this feature. It's best practice to use `FunctionCall` access keys where possible to reduce the frequency of prompts and increase security - we should only "step up" to `FullAccess` keys for Actions that need it.
 
-1. Determine permissions required for transaction(s).
-2. Retrieve key pair(s) locally for account id(s).
-3. Sign and send transaction(s) within the dApp (no need to use WalletConnect session).
+The approach detailed above for WalletConnect and NEAR attempts to solve these challenges with a new method, `near_connect`. The purpose of this method is to request access to one or more accounts in the form of `FunctionCall` access keys. This means:
 
-**Transaction signing (elevated permission)**
+- The dApp "owns" the `FunctionCall` access key.
+- The dApp can sign transactions locally (without WalletConnect) that match the permissions of the access key.
+- The user can revoke the access key without WalletConnect.
 
-1. Determine permissions required for transaction(s).
-2. Call `near_signAndSendTransaction` (or `near_signAndSendTransactions`) for transaction(s) that don't match the `FunctionCall` access key permissions.
-
-**Update accounts (wallet)**
-
-1. Delete `FunctionCall` access keys of each deselected account. Adding new accounts is not supported (unable to send key pairs to dApp).
-2. Trigger WalletConnect session update.
-
-**Update accounts (dApp)**
-
-1. Call `near_connect` to reconfigure account access. This will update the session `accounts` state.
+The difficulty with this approach is trying to sync the WalletConnect accounts state with the accounts we have `FunctionCall` access keys for. I originally planned for a `near_getAccounts` which would also return the `keyPair` but I've since questioned the security implications of exposing key pairs like this. `near_connect` on the other hand requires confirmation from the wallet before returning this information. Without `near_getAccounts` we're unable to handle new accounts added to the session from the wallet side.
 
 ### JSON-RPC Methods
 
 **near_connect**
 
-Request access (via `FunctionCall` access keys) to one or more accounts. Private keys are returned to enable local signing 
+Request access (via `FunctionCall` access keys) to one or more accounts. Private keys are returned to enable local signing
 
 ```ts
 interface ConnectRequest {
@@ -418,46 +426,30 @@ interface SignAndSendTransactionsResponse {
 }
 ```
 
-### Challenges
+### Flows
 
-It's important that an integration between NEAR and WalletConnect combines the native features of both platforms without compromising on their core concepts.
+**Connecting**
 
-Basing our implementation on other platforms such as Ethereum means only `signAndSendTransaction` and `signAndSendTransactions` are needed. The idea with this approach is accounts are referenced in the WalletConnect session and the wallet will use `FullAccess` keys to sign the transaction(s). While this works well with WalletConnect, the downside is it skips over a fundamental concept in NEAR, `FunctionCall` access keys.
+1. Create pairing and session (with no `FunctionCall` access to accounts).
+2. Call `near_connect` to gain access to one or more accounts (via `FunctionCall` access keys). This will update the session `accounts` state.
+3. Store key pair(s) locally to enable signing without WalletConnect for gas-only `FunctionCall` Actions.
 
-Access Keys enable permissions at a blockchain-level and can be revoked at any point. Using `FullAccess` keys effectively skips over this feature. It's best practice to use `FunctionCall` access keys where possible to reduce the frequency of prompts and increase security - we should only "step up" to `FullAccess` keys for Actions that need it.
+**Transaction signing (gas-only `FunctionCall`)**
 
-The approach detailed above for WalletConnect and NEAR attempts to solve these challenges with a new method, `near_connect`. The purpose of this method is to request access to one or more accounts in the form of `FunctionCall` access keys. This means:
+1. Determine permissions required for transaction(s).
+2. Retrieve key pair(s) locally for account id(s).
+3. Sign and send transaction(s) within the dApp (no need to use WalletConnect session).
 
-- The dApp "owns" the `FunctionCall` access key.
-- The dApp can sign transactions locally (without WalletConnect) that match the permissions of the access key.
-- The user can revoke the access key without WalletConnect.
+**Transaction signing (elevated permission)**
 
-The difficulty with this approach is trying to sync the WalletConnect accounts state with the accounts we have `FunctionCall` access keys for. I originally planned for a `near_getAccounts` which would also return the `keyPair` but I've since questioned the security implications of exposing key pairs like this. `near_connect` on the other hand requires confirmation from the wallet before returning this information. Without `near_getAccounts` we're unable to handle new accounts added to the session from the wallet side.
+1. Determine permissions required for transaction(s).
+2. Call `near_signAndSendTransaction` (or `near_signAndSendTransactions`) for transaction(s) that don't match the `FunctionCall` access key permissions.
 
-## Connecting
+**Update accounts (wallet)**
 
-The purpose of connecting to a wallet is to give dApps access to one or more accounts - backed by `FunctionCall` access keys. When the Connect flow is triggered, the user will be prompted with an interface similar to this example taken from Math Wallet:
+1. Delete `FunctionCall` access keys of each deselected account. Adding new accounts is not supported (unable to send key pairs to dApp).
+2. Trigger WalletConnect session update.
 
-![Connect Prompt](assets/connect-prompt.png)
+**Update accounts (dApp)**
 
-The list of accounts to select are those that have been imported previously. The user can choose a subset of these accounts to expose to the dApp.
-
-### Considerations
-
-- If there's only one imported account, the flow can be simplified to an approval prompt to connect with the only account.
-- If there are problems with the `AddKey` action for any account, we should continue unless none were successful. In the event where only a subset of the selected accounts were connected, the dApp can call `connect` again so the user can modify the list (remove existing accounts and/or add new ones).
-- If the dApp would like to restrict the number of accounts (e.g. only one) a user can select, they can pass a `maxAccounts` parameter for the `connect` request method.
-
-### Multiple Accounts
-
-An important concept of this architecture is dApps have access to multiple accounts. This might seem confusing at first because why would a dApp want to sign transactions with multiple accounts? The idea is the dApp might still maintain the concept of a single "active" account, but users won't need to sign in and out of accounts each time. The dApp can just display a switcher and sign transactions with new account without having to further prompt the user, thus improving the UX flow.
-
-TODO: Add references/images around existing wallets and how they have multiple accounts internally, but only expose a single "active" account.
-
-TODO: Talk about how WalletConnect has first-class support for this functionality.
-
-TODO: Reference Ethereum APIs where they also return a list of accounts (though MetaMask always returns an array with one address).
-
-### Locked Status
-
-TODO: Talk about what it means for a wallet to be locked. What you can access etc. 
+1. Call `near_connect` to reconfigure account access. This will update the session `accounts` state.
