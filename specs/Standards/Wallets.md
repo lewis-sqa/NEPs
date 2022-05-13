@@ -34,16 +34,11 @@ import { providers } from "near-api-js";
 
 interface Account {
   accountId: string;
-}
-
-interface KeyPair {
   publicKey: string;
-  privateKey: string;
 }
 
 interface ConnectedAccount extends Account {
-  // Key pair related to the underlying FunctionCall access key.
-  keyPair: KeyPair;
+  privateKey: string
 }
 
 interface Network {
@@ -54,7 +49,6 @@ interface Network {
 interface ConnectParams {
   contractId: string;
   methodNames?: Array<string>;
-  maxAccounts?: number;
 }
 
 interface SignAndSendTransactionParams {
@@ -338,7 +332,7 @@ The difficulty with this approach is trying to sync the WalletConnect accounts s
 
 **near_connect**
 
-Request access (via `FunctionCall` access keys) to one or more accounts. Private keys are returned to enable local signing
+Request access (via `FunctionCall` access keys) to one or more accounts.
 
 ```ts
 interface ConnectRequest {
@@ -348,28 +342,19 @@ interface ConnectRequest {
   params: {
     contractId: string;
     methodNames?: Array<string>;
-    maxAccounts?: number;
+    accounts: Array<Account>,
   };
 }
 
 interface Account {
   accountId: string;
-}
-
-interface KeyPair {
   publicKey: string;
-  privateKey: string;
-}
-
-interface ConnectedAccount extends Account {
-  // Key pair related to the underlying FunctionCall access key.
-  keyPair: KeyPair;
 }
 
 interface ConnectResponse {
   id: 1;
   jsonrpc: "2.0";
-  result: Array<ConnectedAccount>;
+  result: Array<Account>;
 }
 ```
 
@@ -396,7 +381,6 @@ interface SignAndSendTransactionResponse {
   result: providers.FinalExecutionOutcome;
 }
 ```
-
 
 **near_signAndSendTransactions**
 
@@ -430,9 +414,8 @@ interface SignAndSendTransactionsResponse {
 
 **Connecting**
 
-1. Create pairing and session (with no `FunctionCall` access to accounts).
-2. Call `near_connect` to gain access to one or more accounts (via `FunctionCall` access keys). This will update the session `accounts` state.
-3. Store key pair(s) locally to enable signing without WalletConnect for gas-only `FunctionCall` Actions.
+1. Create pairing and session (with no `FunctionCall` access to accounts but have a list of accounts to reference).
+2. Call `near_connect` with matching public keys for each account (via `FunctionCall` access keys).
 
 **Transaction signing (gas-only `FunctionCall`)**
 
