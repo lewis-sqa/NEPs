@@ -10,7 +10,7 @@ After working with various wallets such as Sender and Math Wallet, it's clear th
 
 ## Terminology
 
-- **Connected**: The state of whether a dApp has access to one or more accounts in the form of `FunctionCall` access keys.
+- **Signed in**: The state of whether a dApp has access to one or more accounts in the form of `FunctionCall` access keys.
 
 ## Injected Wallets
 
@@ -37,8 +37,8 @@ interface Account {
   publicKey: string;
 }
 
-interface ConnectedAccount extends Account {
-  privateKey: string
+interface SignedInAccount extends Account {
+  privateKey: string;
 }
 
 interface Network {
@@ -46,7 +46,7 @@ interface Network {
   nodeUrl: string;
 }
 
-interface ConnectParams {
+interface SignInParams {
   contractId: string;
   methodNames?: Array<string>;
 }
@@ -82,16 +82,16 @@ interface Methods {
     };
     response: Network;
   };
-  connect: {
+  signIn: {
     params: {
-      method: "connect";
-      params: ConnectParams;
+      method: "signIn";
+      params: SignInParams;
     };
-    response: Array<ConnectedAccount>;
+    response: Array<SignedInAccount>;
   };
-  disconnect: {
+  signOut: {
     params: {
-      method: "disconnect";
+      method: "signOut";
     };
     response: void;
   };
@@ -138,16 +138,16 @@ interface Wallet {
 
 ### Request Methods
 
-- `getAccounts`: Get accounts exposed to dApp. An empty list of accounts means we aren't connected.
+- `getAccounts`: Get accounts exposed to dApp. An empty list of accounts means we aren't signed in.
 - `getNetwork`: Get the currently selected network.
-- `connect`: Request access to one or more accounts.
-- `disconnect`: Remove access to all accounts.
+- `signIn`: Request access to one or more accounts.
+- `signOut`: Remove access to all accounts.
 - `signAndSendTransaction`: Sign and Send one or more NEAR Actions.
 - `signAndSendTransactions`: Sign and Send one or more NEAR Transactions.
 
 ### Events
 
-- `accountsChanged`: Triggered whenever accounts are updated (e.g. calling `connect` and `disconnect`).
+- `accountsChanged`: Triggered whenever accounts are updated (e.g. calling `signIn` and `signOut`).
 
 ### Actions
 
@@ -236,16 +236,16 @@ type Action =
 
 ### Examples
 
-**Connect to the wallet**
+**Sign in to the wallet**
 
 ```ts
 const accounts = await window.near.request({
-  method: "connect",
+  method: "signIn",
   params: { contractId: "guest-book.testnet" }
 });
 ```
 
-**Get accounts (after previously calling `connect`)**
+**Get accounts (after previously calling `signIn`)**
 
 ```ts
 const accounts = await window.near.request({
@@ -290,19 +290,18 @@ const result = await window.near.request({
 });
 ```
 
-## Connecting
+## Sign In
 
-The purpose of connecting to a wallet is to give dApps access to one or more accounts - backed by `FunctionCall` access keys. When the Connect flow is triggered, the user will be prompted with an interface similar to this example taken from Math Wallet:
+The purpose of signing in to a wallet is to give dApps access to one or more accounts using `FunctionCall` access keys. When the sign in flow is triggered, the user will be prompted with an interface similar to this example taken from Math Wallet:
 
-![Connect Prompt](assets/connect-prompt.png)
+![Sign In Prompt](assets/sign-in-prompt.png)
 
 The list of accounts to select are those that have been imported previously. The user can choose a subset of these accounts to expose to the dApp.
 
 ### Considerations
 
-- If there's only one imported account, the flow can be simplified to an approval prompt to connect with the only account.
-- If there are problems with the `AddKey` action for any account, we should continue unless none were successful. In the event where only a subset of the selected accounts were connected, the dApp can call `connect` again so the user can modify the list (remove existing accounts and/or add new ones).
-- If the dApp would like to restrict the number of accounts (e.g. only one) a user can select, they can pass a `maxAccounts` parameter for the `connect` request method.
+- If there's only one imported account, the flow can be simplified to an approval prompt to sign in with the only account.
+- If there are problems with the `AddKey` action for any account, we should continue unless none were successful. In the event where only a subset of the selected accounts were signed in, the dApp can call `signIn` again so the user can modify the list (remove existing accounts and/or add new ones).
 
 ### Multiple Accounts
 
@@ -310,7 +309,7 @@ An important concept of this architecture is dApps have access to multiple accou
 
 ## Bridge Wallets (i.e. WalletConnect)
 
-Bridge wallets such as WalletConnect enable an architecture that decouples dApps from directly interacting with a wallet by using a relay (HTTP/WebSocket) server. The benefit to this is users can connect to wallets that aren't necessarily located in the same place as the dApp. For example a user can connect a dApp on their desktop to a wallet on their mobile device.
+Bridge wallets such as WalletConnect enable an architecture that decouples dApps from directly interacting with a wallet by using a relay (HTTP/WebSocket) server. The benefit to this is users can sign in to wallets that aren't necessarily located in the same place as the dApp. For example a user can sign in a dApp on their desktop to a wallet on their mobile device.
 
 ### Challenges
 
