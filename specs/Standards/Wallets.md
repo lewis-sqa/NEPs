@@ -319,41 +319,65 @@ Basing our implementation on other platforms such as Ethereum means only `signAn
 
 Access Keys enable permissions at a blockchain-level and can be revoked at any point. Using `FullAccess` keys effectively skips over this feature. It's best practice to use `FunctionCall` access keys where possible to reduce the frequency of prompts and increase security - we should only "step up" to `FullAccess` keys for Actions that need it.
 
-The approach detailed above for WalletConnect and NEAR attempts to solve these challenges with a new method, `near_connect`. The purpose of this method is to request access to one or more accounts in the form of `FunctionCall` access keys. This means:
+The approach detailed above for WalletConnect and NEAR attempts to solve these challenges with a new method, `near_signIn`. The purpose of this method is to request access to one or more accounts in the form of `FunctionCall` access keys. This means:
 
 - The dApp "owns" the `FunctionCall` access key.
 - The dApp can sign transactions locally (without WalletConnect) that match the permissions of the access key.
 - The user can revoke the access key without WalletConnect.
 
-The difficulty with this approach is trying to sync the WalletConnect accounts state with the accounts we have `FunctionCall` access keys for. I originally planned for a `near_getAccounts` which would also return the `keyPair` but I've since questioned the security implications of exposing key pairs like this. `near_connect` on the other hand requires confirmation from the wallet before returning this information. Without `near_getAccounts` we're unable to handle new accounts added to the session from the wallet side.
-
 ### JSON-RPC Methods
 
-**near_connect**
+**near_signIn**
 
 Request access (via `FunctionCall` access keys) to one or more accounts.
 
 ```ts
-interface ConnectRequest {
-  id: 1;
-  jsonrpc: "2.0";
-  method: "near_connect";
-  params: {
-    contractId: string;
-    methodNames?: Array<string>;
-    accounts: Array<Account>,
-  };
-}
-
 interface Account {
   accountId: string;
   publicKey: string;
 }
 
-interface ConnectResponse {
+interface SignInRequest {
+  id: 1;
+  jsonrpc: "2.0";
+  method: "near_signIn";
+  params: {
+    contractId: string;
+    methodNames?: Array<string>;
+    accounts: Array<Account>;
+  };
+}
+
+interface SignInResponse {
   id: 1;
   jsonrpc: "2.0";
   result: Array<Account>;
+}
+```
+
+**near_signOut**
+
+Remove access (via `FunctionCall` access keys) to one or more accounts.
+
+```ts
+interface Account {
+  accountId: string;
+  publicKey: string;
+}
+
+interface SignOutRequest {
+  id: 1;
+  jsonrpc: "2.0";
+  method: "near_signOut";
+  params: {
+    accounts: Array<Account>;
+  };
+}
+
+interface SignOutResponse {
+  id: 1;
+  jsonrpc: "2.0";
+  result: null;
 }
 ```
 
@@ -411,10 +435,11 @@ interface SignAndSendTransactionsResponse {
 
 ### Flows
 
-**Connecting**
+**Signing in**
 
 1. Create pairing and session (with no `FunctionCall` access to accounts but have a list of accounts to reference).
-2. Call `near_connect` with matching public keys for each account (via `FunctionCall` access keys).
+2. Call `near_signIn` with locally generated public keys for each account.
+3. Store locally generated key pairs.
 
 **Transaction signing (gas-only `FunctionCall`)**
 
@@ -422,16 +447,22 @@ interface SignAndSendTransactionsResponse {
 2. Retrieve key pair(s) locally for account id(s).
 3. Sign and send transaction(s) within the dApp (no need to use WalletConnect session).
 
-**Transaction signing (elevated permission)**
+**Transaction signing (gas-only `FunctionCall` & missing applicable `FunctionCall` access keys)**
 
 1. Determine permissions required for transaction(s).
-2. Call `near_signAndSendTransaction` (or `near_signAndSendTransactions`) for transaction(s) that don't match the `FunctionCall` access key permissions.
+2. Call `near_signIn` with locally generated public keys for each missing account.
+3. Sign and send transaction(s) within the dApp (no need to use WalletConnect session).
 
-**Update accounts (wallet)**
+**Transaction signing (elevated permission required)**
 
-1. Delete `FunctionCall` access keys of each deselected account. Adding new accounts is not supported (unable to send key pairs to dApp).
+1. Determine permissions required for transaction(s).
+2. Call `near_signAndSendTransaction` (or `near_signAndSendTransactions`) for transaction(s) regardless of whether there's other transaction(s) that can be signed locally.
+
+**Add accounts (wallet)**
+
+1. N/A - handled during transaction signing.
+
+**Remove accounts (wallet)**
+
+1. Delete `FunctionCall` access keys of each deselected account.
 2. Trigger WalletConnect session update.
-
-**Update accounts (dApp)**
-
-1. Call `near_connect` to reconfigure account access. This will update the session `accounts` state.
