@@ -37,10 +37,6 @@ interface Account {
   publicKey: string;
 }
 
-interface SignedInAccount extends Account {
-  privateKey: string;
-}
-
 interface Network {
   networkId: string;
   nodeUrl: string;
@@ -87,7 +83,7 @@ interface Methods {
       method: "signIn";
       params: SignInParams;
     };
-    response: Array<SignedInAccount>;
+    response: Array<Account>;
   };
   signOut: {
     params: {
