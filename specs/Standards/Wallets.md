@@ -311,14 +311,12 @@ Bridge wallets such as [WalletConnect](https://docs.walletconnect.com/2.0/) enab
 
 It's important that an integration between NEAR and WalletConnect combines the native features of both platforms without compromising on their core concepts.
 
-Basing our implementation on other platforms such as Ethereum means only `signAndSendTransaction` and `signAndSendTransactions` are needed. The idea with this approach is accounts are referenced in the WalletConnect session and the wallet will use `FullAccess` keys to sign the transaction(s). While this works well with WalletConnect, the downside is it skips over a fundamental concept in NEAR, `FunctionCall` access keys.
+If we based our approach on other platforms such as Ethereum, we would only need two methods: `signAndSendTransaction` and `signAndSendTransactions`. The session state from WalletConnect means dApps can reference the available accounts to populate the `signerId` for each transaction and the wallet can make use of `FullAccess` key(s) to carry out the signing. The consequence of this approach is we aren't levering the permission model built into NEAR at the blockchain level using `FunctionCall` access keys.
 
-Access Keys enable permissions at a blockchain-level and can be revoked at any point. Using `FullAccess` keys effectively skips over this feature. It's best practice to use `FunctionCall` access keys where possible to reduce the frequency of prompts and increase security - we should only "step up" to `FullAccess` keys for Actions that need it.
-
-The approach detailed above for WalletConnect and NEAR attempts to solve these challenges with a new method, `near_signIn`. The purpose of this method is to request access to one or more accounts in the form of `FunctionCall` access keys. This means:
+The approach detailed below attempts to solve these challenges with two additional methods: `near_signIn` and `near_signOut`. The purpose of these methods is to handle the lifecycle of dApps that want to leverage `FunctionCall` access keys to reduce the frequency of prompts (i.e. gas-only `FunctionCall` actions). This means:
 
 - The dApp "owns" the `FunctionCall` access key.
-- The dApp can sign transactions locally (without WalletConnect) that match the permissions of the access key.
+- The dApp can sign transactions locally (without WalletConnect) when they match the permissions of the access key.
 - The user can revoke the access key without WalletConnect.
 
 ### JSON-RPC Methods
