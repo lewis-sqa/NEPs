@@ -437,6 +437,11 @@ interface SignAndSendTransactionsResponse {
 2. Call `near_signIn` with locally generated public keys for each account.
 3. Store locally generated key pairs.
 
+**Signing out**
+
+1. Call `near_signOut` with locally generated public keys for each account.
+2. Remove generated key pairs stored locally.
+
 **Transaction signing (gas-only `FunctionCall`)**
 
 1. Determine permissions required for transaction(s).
