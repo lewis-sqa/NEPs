@@ -305,7 +305,7 @@ An important concept of this architecture is dApps have access to multiple accou
 
 ## Bridge Wallets (i.e. WalletConnect)
 
-Bridge wallets such as WalletConnect enable an architecture that decouples dApps from directly interacting with a wallet by using a relay (HTTP/WebSocket) server. The benefit to this is users can sign in to wallets that aren't necessarily located in the same place as the dApp. For example a user can sign in a dApp on their desktop to a wallet on their mobile device.
+Bridge wallets such as [WalletConnect](https://docs.walletconnect.com/2.0/) enable an architecture that decouples dApps from directly interacting with a wallet by using a relay (HTTP/WebSocket) server. The benefit to this is dApp users can sign transactions using wallets that aren't necessarily located in the same place as the dApp. For example signing a transaction on the desktop using a wallet on a mobile device.
 
 ### Challenges
 
