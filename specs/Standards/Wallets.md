@@ -117,13 +117,13 @@ interface Wallet {
   id: string;
   request<
     MethodName extends keyof Methods,
-    Method extends Methods<MethodName>
+    Method extends Methods[MethodName]
   >(
     params: Method["params"]
   ): Promise<Method["response"]>;
   on<EventName extends keyof Events>(
     event: EventName,
-    callback: (params: Events<EventName>) => void
+    callback: (params: Events[EventName]) => void
   ): Unsubscribe;
   off<EventName extends keyof Events>(
     event: EventName,
