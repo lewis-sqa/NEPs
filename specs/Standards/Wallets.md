@@ -444,7 +444,7 @@ interface SignAndSendTransactionsResponse {
 
 **Signing in**
 
-1. dApp makes request with `contractId` and optionally `methodNames`.
+1. dApp makes `near_signIn` request with `contractId` and optionally `methodNames`.
 2. wallet receives request and generates a key pair for each account in the session.
 3. wallet sends a Transaction containing an `AddKey` Action for each key pair.
 4. wallet stores the newly generated key pairs securely (mapped to WalletConnect session `topicId`). 
@@ -452,8 +452,11 @@ interface SignAndSendTransactionsResponse {
 
 **Signing out**
 
-1. Call `near_signOut` with locally generated public keys for each account.
-2. Remove generated key pairs stored locally.
+1. dApp makes `near_signOut` request.
+2. wallet receives request and gathers each account's public key (`FunctionCall` access key).
+3. wallet sends a Transaction containing a `DeleteKey` Action for each public key.
+4. wallet clears stored key pairs (related to WalletConnect session `topicId`).
+5. wallet responds with `null`.
 
 **Transaction signing (gas-only `FunctionCall`)**
 
