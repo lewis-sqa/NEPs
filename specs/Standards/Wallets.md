@@ -313,11 +313,7 @@ It's important that an integration between NEAR and WalletConnect combines the n
 
 Basing an approach on other platforms such as Ethereum would simply require two methods: `signAndSendTransaction` and `signAndSendTransactions`. The session state from WalletConnect allows dApps to reference the available accounts to populate the `signerId` for each transaction. Wallets can use `FullAccess` key(s) to carry out signing while cross-referencing the accounts a session has access to. The consequence of this approach is we aren't leveraging the permission model built into NEAR at the blockchain level using `FunctionCall` access keys.
 
-The approach detailed below attempts to solve these challenges with two additional methods: `near_signIn` and `near_signOut`. The purpose of these methods is to handle the lifecycle of dApps that want to leverage `FunctionCall` access keys to reduce the frequency of prompts (i.e. gas-only `FunctionCall` actions). This means:
-
-- The dApp "owns" the `FunctionCall` access key.
-- The dApp can sign transactions locally (without WalletConnect) when they match the permissions of the access key.
-- The user can revoke the access key without WalletConnect.
+The approach detailed below attempts to solve these challenges with three additional methods: `near_signIn`, `near_signOut` and `near_getAccounts`. The purpose of these methods is to handle the lifecycle of dApps that want to leverage `FunctionCall` access keys to reduce the frequency of prompts (i.e. gas-only `FunctionCall` actions).
 
 ### JSON-RPC Methods
 
