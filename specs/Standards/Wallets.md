@@ -444,9 +444,11 @@ interface SignAndSendTransactionsResponse {
 
 **Signing in**
 
-1. Create pairing and session (with no `FunctionCall` access to accounts but have a list of accounts to reference).
-2. Call `near_signIn` with locally generated public keys for each account.
-3. Store locally generated key pairs.
+1. dApp makes request with `contractId` and optionally `methodNames`.
+2. wallet receives request and generates a key pair for each account in the session.
+3. wallet sends a Transaction containing an `AddKey` Action for each key pair.
+4. wallet stores the newly generated key pairs securely (mapped to WalletConnect session `topicId`). 
+5. wallet responds with each account and its respective public key (`FunctionCall` access key). 
 
 **Signing out**
 
