@@ -338,7 +338,6 @@ interface SignInRequest {
   params: {
     contractId: string;
     methodNames?: Array<string>;
-    accounts: Array<Account>;
   };
 }
 
@@ -354,18 +353,11 @@ interface SignInResponse {
 Remove access (via `FunctionCall` access keys) to one or more accounts.
 
 ```ts
-interface Account {
-  accountId: string;
-  publicKey: string;
-}
-
 interface SignOutRequest {
   id: 1;
   jsonrpc: "2.0";
   method: "near_signOut";
-  params: {
-    accounts: Array<Account>;
-  };
+  params: {};
 }
 
 interface SignOutResponse {
@@ -375,20 +367,48 @@ interface SignOutResponse {
 }
 ```
 
+**near_getAccounts**
+
+Retrieve accounts with `FunctionCall` access.
+
+```ts
+interface Account {
+  accountId: string;
+  publicKey: string;
+}
+
+interface GetAccountsRequest {
+  id: 1;
+  jsonrpc: "2.0";
+  method: "near_getAccounts";
+  params: {};
+}
+
+interface GetAccountsResponse {
+  id: 1;
+  jsonrpc: "2.0";
+  result: Array<Account>;
+}
+```
+
 **near_signAndSendTransaction**
 
 ```ts
 import { providers } from "near-api-js";
+
+interface Transaction {
+  signerId?: string;
+  receiverId: string;
+  // NEAR Actions (plain objects). See "Actions" section for details.
+  actions: Array<Action>;
+}
 
 interface SignAndSendTransactionRequest {
   id: 1;
   jsonrpc: "2.0";
   method: "near_signAndSendTransaction";
   params: {
-    signerId?: string;
-    receiverId: string;
-    // NEAR Actions (plain objects). See "Actions" section for details.
-    actions: Array<Action>;
+    transaction: Transaction;
   };
 }
 
@@ -411,13 +431,6 @@ interface SignAndSendTransactionsRequest {
   params: {
     transactions: Array<Transaction>;
   };
-}
-
-interface Transaction {
-  signerId?: string;
-  receiverId: string;
-  // NEAR Actions (plain objects). See "Actions" section for details.
-  actions: Array<Action>;
 }
 
 interface SignAndSendTransactionsResponse {
