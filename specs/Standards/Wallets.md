@@ -472,11 +472,17 @@ interface SignAndSendTransactionsResponse {
 3. wallet presents approval prompt before using the account's "root" (`FullAccess` access key). 
 4. wallet responds with `providers.FinalExecutionOutcome`.
 
-**Add accounts (wallet)**
+**Add account(s)**
 
-1. N/A - handled during transaction signing.
+1. wallet prepares to update session by adding new account(s).
+2. wallet generates a key pair for each new account.
+3. wallet sends a Transaction containing an `AddKey` Action for each key pair.
+4. wallet triggers `session_update` with WalletConnect client.
 
-**Remove accounts (wallet)**
+**Remove account(s)**
 
-1. Delete `FunctionCall` access keys of each deselected account.
-2. Trigger WalletConnect session update.
+1. wallet prepares to update session by removing account(s).
+2. wallet gathers the public key (`FunctionCall` access key) of each account to remove.
+3. wallet sends a Transaction containing an `DeleteKey` Action for each public key.
+4. wallet clears stored key pairs of each account (related to WalletConnect session `topicId`).
+5. wallet triggers `session_update` with WalletConnect client.
