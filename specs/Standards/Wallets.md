@@ -460,20 +460,17 @@ interface SignAndSendTransactionsResponse {
 
 **Transaction signing (gas-only `FunctionCall`)**
 
-1. Determine permissions required for transaction(s).
-2. Retrieve key pair(s) locally for account id(s).
-3. Sign and send transaction(s) within the dApp (no need to use WalletConnect session).
-
-**Transaction signing (gas-only `FunctionCall` & missing applicable `FunctionCall` access keys)**
-
-1. Determine permissions required for transaction(s).
-2. Call `near_signIn` with locally generated public keys for each missing account.
-3. Sign and send transaction(s) within the dApp (no need to use WalletConnect session).
+1. dApp makes `near_signAndSendTransaction` request.
+2. wallet determines the Transaction can be signed with the `FunctionCall` access key.
+3. wallet "silently" signs the transaction without need for an approval prompt.
+4. wallet responds with `providers.FinalExecutionOutcome`.
 
 **Transaction signing (elevated permission required)**
 
-1. Determine permissions required for transaction(s).
-2. Call `near_signAndSendTransaction` (or `near_signAndSendTransactions`) for transaction(s) regardless of whether there's other transaction(s) that can be signed locally.
+1. dApp makes `near_signAndSendTransaction` request.
+2. wallet determines the Transaction can't be signed with the `FunctionCall` access key (or one doesn't exist if `near_signIn` hasn't used).
+3. wallet presents approval prompt before using the account's "root" (`FullAccess` access key). 
+4. wallet responds with `providers.FinalExecutionOutcome`.
 
 **Add accounts (wallet)**
 
